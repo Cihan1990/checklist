@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 
-
 void main() {
   runApp(Checklist());
 }
@@ -30,6 +29,9 @@ class _MainScreenState extends State<MainScren> {
   final TextEditingController _controller = TextEditingController();
 
   void _addItem() {
+    if (_controller.text.isEmpty) {
+      return;
+    }
     setState(() {
       _items.add(_controller.text);
       _controller.clear();
@@ -48,39 +50,52 @@ class _MainScreenState extends State<MainScren> {
       appBar: AppBar(
         title: Text('Liste'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                labelText: 'Gib einen Text ein',
-                border: OutlineInputBorder(),
+      body: Form(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _controller,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: validateText,
+                decoration: InputDecoration(
+                  labelText: 'Gib einen Text ein',
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _addItem,
-              child: Text('Hinzufügen'),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _items.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(_items[index]),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete),
-                      onPressed: () => _removeItem(index),
-                    ),
-                  );
-                },
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _addItem,
+                child: Text('Hinzufügen'),
               ),
-            ),
-          ],
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _items.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(_items[index]),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () => _removeItem(index),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+String? validateText(String? input) {
+  if (input == null || input.isEmpty) {
+    return 'Bitte Text eingeben';
+  }
+  return null;
+}
+
+
