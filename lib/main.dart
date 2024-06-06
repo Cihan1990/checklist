@@ -1,46 +1,62 @@
-// ignore_for_file: prefer_const_constructors, use_key_in_widget_constructors, library_private_types_in_public_api
+// ignore_for_file: library_private_types_in_public_api, use_key_in_widget_constructors
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(Checklist());
+  runApp(CheckList());
 }
 
-class Checklist extends StatelessWidget {
+class CheckList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Checkliste',
+      title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MainScren(),
+      home: MainScreen(),
     );
   }
 }
 
-class MainScren extends StatefulWidget {
+class MainScreen extends StatefulWidget {
   @override
   _MainScreenState createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScren> {
-  final List<String> _items = [];
+class _MainScreenState extends State<MainScreen> {
   final TextEditingController _controller = TextEditingController();
+  List<String> _items = [];
 
-  void _addItem() {
-    if (_controller.text.isEmpty) {
-      return;
-    }
+  @override
+  void initState() {
+    super.initState();
+    _loadItems();
+  }
+
+  Future<void> _loadItems() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _items = prefs.getStringList('items') ?? [];
+    });
+  }
+
+  Future<void> _addItem() async {
+    if (_controller.text.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
       _items.add(_controller.text);
+      prefs.setStringList('items', _items);
       _controller.clear();
     });
   }
 
-  void _removeItem(int index) {
+  Future<void> _removeItem(int index) async {
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
       _items.removeAt(index);
+      prefs.setStringList('items', _items);
     });
   }
 
@@ -48,54 +64,41 @@ class _MainScreenState extends State<MainScren> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Liste'),
+        title: const Text('Liste'),
       ),
-      body: Form(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _controller,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                validator: validateText,
-                decoration: InputDecoration(
-                  labelText: 'Gib einen Text ein',
-                  border: OutlineInputBorder(),
-                ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _controller,
+              decoration: const InputDecoration(
+                labelText: 'Gib einen Text ein',
+                border: OutlineInputBorder(),
               ),
-              SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _addItem,
-                child: Text('Hinzufügen'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _addItem,
+              child: const Text('Hinzufügen'),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _items.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(_items[index]),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () => _removeItem(index),
+                    ),
+                  );
+                },
               ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _items.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text(_items[index]),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () => _removeItem(index),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
-
-String? validateText(String? input) {
-  if (input == null || input.isEmpty) {
-    return 'Bitte Text eingeben';
-  }
-  return null;
-}
-
-
