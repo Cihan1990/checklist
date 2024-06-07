@@ -70,8 +70,10 @@ class _MainScreenState extends State<MainScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
+            TextFormField(
               controller: _controller,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              validator: validateText,
               decoration: const InputDecoration(
                 labelText: 'Gib einen Text ein',
                 border: OutlineInputBorder(),
@@ -101,4 +103,11 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
+}
+
+String? validateText(String? input) {
+  if (input == null || input.isEmpty) {
+    return 'Bitte Text eingeben';
+  }
+  return null;
 }
